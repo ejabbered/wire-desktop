@@ -22,8 +22,8 @@ import {parse as parseContentType, ParsedMediaType} from 'content-type';
 import {IncomingMessage} from 'http';
 import {decode as iconvDecode} from 'iconv-lite';
 import {Data as OpenGraphResult, parse as openGraphParse} from 'open-graph';
-import * as path from 'path';
 import {parse as parseUrl} from 'url';
+import * as path from 'path';
 
 import {getLogger} from '../logging/getLogger';
 import {config} from '../settings/config';
@@ -127,7 +127,10 @@ export const axiosWithContentLimit = async (config: AxiosRequestConfig, contentL
     const body = await new Promise<string>((resolve, reject) => {
       let partialBody = '';
 
+      // Info: The 'end' event handler must be first: https://github.com/electron/electron/issues/12545#issuecomment-380478350
       response.data
+        .on('end', () => resolve(partialBody))
+        .on('error', error => reject(error))
         .on('data', (buffer: Buffer) => {
           let chunk = buffer.toString('utf8');
 
@@ -145,9 +148,7 @@ export const axiosWithContentLimit = async (config: AxiosRequestConfig, contentL
             cancelSource.cancel();
             resolve(partialBody);
           }
-        })
-        .on('error', error => reject(error))
-        .on('end', () => resolve(partialBody));
+        });
     });
 
     return body;

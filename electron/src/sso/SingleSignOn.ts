@@ -222,7 +222,7 @@ export class SingleSignOn {
   // `window.opener` is not available when sandbox is activated,
   // therefore we need to fake the function on backend area and
   // redirect the response to a custom protocol
-  public static readonly getWindowOpenerScript = () => {
+  public static readonly getWindowOpenerScript = (): string => {
     return `Object.defineProperty(window, 'opener', {
       configurable: true, // Needed on Chrome :(
       enumerable: false,
@@ -241,11 +241,12 @@ export class SingleSignOn {
   };
 
   private static async copyCookies(fromSession: Session, toSession: Session, url: URL): Promise<void> {
-    const rootDomain = url.hostname.split('.').slice(-2).join('.');
-    const cookies = await fromSession.cookies.get({domain: rootDomain});
+    const cookies = await fromSession.cookies.get({name: 'zuid'});
 
     for (const cookie of cookies) {
-      await toSession.cookies.set({url: url.toString(), ...cookie});
+      if (cookie.domain) {
+        await toSession.cookies.set({url: url.toString(), ...cookie});
+      }
     }
 
     await toSession.cookies.flushStore();
@@ -261,7 +262,7 @@ export class SingleSignOn {
     // Generate a new secret to authenticate the custom protocol (wire-sso)
     SingleSignOn.loginAuthorizationSecret = await SingleSignOn.generateSecret(24);
 
-    const handleRequest = (request: ProtocolRequest) => {
+    const handleRequest = (request: ProtocolRequest): void => {
       try {
         const requestURL = new URL(request.url);
 
@@ -340,7 +341,7 @@ export class SingleSignOn {
 
     // Fake postMessage to the webview
     await this.senderWebContents.executeJavaScript(
-      `window.dispatchEvent(new MessageEvent('message', {origin: '${this.windowOriginUrl.origin}', data: {type: '${type}'}, type: {isTrusted: true}}));`,
+      `window.dispatchEvent(new MessageEvent('message', {origin: '${this.windowOriginUrl.origin}', data: {type: '${type}'}}));`,
     );
   }
 
