@@ -144,7 +144,6 @@ export class SingleSignOn {
         contextIsolation: true,
         devTools: true,
         disableBlinkFeatures: '',
-        enableBlinkFeatures: '',
         experimentalFeatures: false,
         images: true,
         javascript: true,
@@ -163,6 +162,7 @@ export class SingleSignOn {
         webSecurity: true,
         webgl: false,
         webviewTag: false,
+        worldSafeExecuteJavaScript: true,
       },
       width: this.windowOptions.width || 480,
     });
